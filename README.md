@@ -1,6 +1,6 @@
 # 注音冒險樂園
 
-由 bedstv/bedstv.github.io 的注音遊戲拆出，保留 v0.2.4 原始碼、測試、音檔、圖片與授權資料。
+包含 v0.2.4 原始碼、測試、音檔、圖片與授權資料。
 
 遊戲網址：https://hiroaaaaa.github.io/zhuyin/
 
