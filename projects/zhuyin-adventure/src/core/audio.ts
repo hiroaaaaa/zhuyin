@@ -1,3 +1,4 @@
+import { WORDS } from "../data/advanced";
 const BASE = import.meta.env.BASE_URL;
 const RESUME_TIMEOUT = 4000;
 const AUDIO_ERROR = "聲音未能啟動，請點「重新啟用聲音」後再試。";
@@ -22,6 +23,7 @@ export class AudioPlayer {
   cache = new Map<string, AudioBuffer>();
   private cancelEnd: (() => void) | null = null;
   private fetching: AbortController | null = null;
+  private cancelSpeech: (() => void) | null = null;
   constructor() {
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", () => {
@@ -62,6 +64,8 @@ export class AudioPlayer {
   }
   stop() {
     this.token++;
+    this.cancelSpeech?.();
+    this.cancelSpeech = null;
     this.fetching?.abort();
     this.fetching = null;
     this.cancelEnd?.();
@@ -73,6 +77,37 @@ export class AudioPlayer {
     }
     this.source = null;
   }
+  /** Device-local speech for extra WORDS, never used to pronounce bare ㄅㄆㄇ symbols. */
+  private speakWord(text: string): Promise<void> {
+    if (typeof window === "undefined" || !window.speechSynthesis ||
+        typeof SpeechSynthesisUtterance === "undefined")
+      return Promise.reject(new AudioPlaybackError("此裝置未提供中文語音，請使用已安裝繁體中文語音的瀏覽器。"));
+    const synth = window.speechSynthesis;
+    return new Promise<void>((resolve, reject) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "zh-TW";
+      utterance.rate = 0.85;
+      const voices = synth.getVoices();
+      const taiwan = voices.find((v) => v.lang.toLowerCase().replace("_", "-") === "zh-tw");
+      if (taiwan) utterance.voice = taiwan;
+      let done = false;
+      const timer = setTimeout(() => finish(new AudioPlaybackError("語音逾時，請確認已安裝繁體中文語音。")), 15000);
+      const finish = (err?: Error) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        utterance.onend = null;
+        utterance.onerror = null;
+        this.cancelSpeech = null;
+        err ? reject(err) : resolve();
+      };
+      this.cancelSpeech = () => { synth.cancel(); finish(); };
+      utterance.onend = () => finish();
+      utterance.onerror = () => finish(new AudioPlaybackError("無法播放繁體中文語音，請檢查裝置的語音設定。"));
+      try { synth.cancel(); synth.speak(utterance); }
+      catch { finish(new AudioPlaybackError("此裝置無法啟動中文朗讀。")); }
+    });
+  }
   async play(clips: string[]) {
     this.stop();
     const token = this.token;
@@ -82,6 +117,13 @@ export class AudioPlayer {
       const ctx = this.context!;
       for (const id of clips) {
         if (token !== this.token) return false;
+        const wordId = id.startsWith("advanced/word-") ? id.slice(14) : null;
+        const extraWord = wordId ? WORDS.find((w) => w.id === wordId && w.emoji) : null;
+        if (extraWord) {
+          await this.speakWord(extraWord.text);
+          if (token !== this.token) return false;
+          continue;
+        }
         let buffer = this.cache.get(id);
         if (!buffer) {
           const controller = new AbortController();

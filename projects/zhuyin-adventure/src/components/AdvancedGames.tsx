@@ -334,7 +334,12 @@ export function AdvancedRound({
 }) {
   const round = useRef(crypto.randomUUID()).current;
   const serial = useRef(0),
-    recent = useRef<string[]>([]);
+    recent = useRef<string[]>(
+      pool.results
+        .filter((r) => r.game === config.game && r.difficulty === config.difficulty && r.kind !== "interrupted")
+        .slice(-120)
+        .map((r) => r.target),
+    );
   function newQuestion() {
     const q = makeAdvancedQuestion(
       config,

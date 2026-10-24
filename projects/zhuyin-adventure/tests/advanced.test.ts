@@ -36,6 +36,15 @@ const config = (
   mode: "guided" | "complete" = "complete",
 ): AdvancedConfig => ({ game, difficulty, mode, questionCount: 5 });
 describe("六款進階題庫", () => {
+  it("擴充 120 個有注音、聲調與圖片的不同單音節詞語", () => {
+    expect(WORDS).toHaveLength(138);
+    expect(new Set(WORDS.map((w) => w.id)).size).toBe(138);
+    expect(new Set(WORDS.map((w) => w.text)).size).toBe(138);
+    expect(WORDS.filter((w) => w.emoji)).toHaveLength(120);
+    expect(WORDS.every((w) => w.parts.length >= 1 && w.parts.every((id) => SYMBOLS.some((s) => s.id === id)))).toBe(true);
+    expect(WORDS.every((w) => [1, 2, 3, 4].includes(w.tone))).toBe(true);
+    expect(spellingCandidates(config("train", 2), pool).length).toBeGreaterThan(100);
+  });
   it("入門擴充兩符號詞語；每種詞語輪完才重複，三十題均衡", () => {
     const cfg = config("train");
     const count = WORDS.filter((w) => w.parts.length === 2).length;

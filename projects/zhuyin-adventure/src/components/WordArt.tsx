@@ -10,6 +10,7 @@ function Eyes({ y = 82 }: { y?: number }) {
 }
 export function WordArt({ id }: { id: string }) {
   const title = word(id).text;
+  const emoji = word(id).emoji;
   const pictures: Record<string, React.ReactNode> = {
     book: (
       <>
@@ -235,7 +236,11 @@ export function WordArt({ id }: { id: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        {pictures[id]}
+        {pictures[id] ?? (
+          <text x="80" y="107" fontSize="86" textAnchor="middle" stroke="none">
+            {emoji || "❔"}
+          </text>
+        )}
       </g>
     </svg>
   );
