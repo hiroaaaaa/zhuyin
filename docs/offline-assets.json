@@ -1,10 +1,10 @@
 {
-  "version": "7a42bd63bb94",
-  "count": 171,
+  "version": "7f95d8ecba0c",
+  "count": 172,
   "assets": [
     {
       "url": "assets/index-M5Dywizo.js",
-      "sha": "7a42bd63bb94581fd5098ce5f1db1dd9429f7f88651b3e2ad2929f9d2ae469c9"
+      "sha": "a27eba941494c658fde14b168ef1f08f9099009795766a9ef3b3dff636fa617a"
     },
     {
       "url": "assets/index-RJ2Qkt8V.css",
@@ -685,6 +685,10 @@
     {
       "url": "manifest.webmanifest",
       "sha": "9aabad5d5e0f4d50468d72fa0c2043bf224a98a6930527ca0516a91473fde404"
+    },
+    {
+      "url": "release.json",
+      "sha": "9893a558f6fc7c6584e5a02887ef2007e5dbed9750131d8a888a448de12c2b0b"
     }
   ]
 }
