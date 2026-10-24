@@ -28,6 +28,7 @@ export function registerOffline(onState: (s: OfflineState) => void) {
       scope: import.meta.env.BASE_URL,
     })
     .then((reg) => {
+      void reg.update().catch(() => {});
       if (reg.waiting) report({ update: true });
       reg.addEventListener("updatefound", () => {
         const worker = reg.installing;
