@@ -6,7 +6,7 @@ export const ADVANCED_GAMES = {
     icon: "🚂",
     color: "peach",
     help: "聽完整讀音，再依序點注音，放進小火車。",
-    levels: ["兩個符號・聽拼音", "兩個符號・四聲", "三個符號", "拼音＋選聲調"],
+    levels: ["兩個符號・聽拼音", "兩個符號・四聲", "兩、三個符號混合", "拼音＋選聲調"],
   },
   tone: {
     title: "聲調氣球",
@@ -22,7 +22,7 @@ export const ADVANCED_GAMES = {
     icon: "🔎",
     color: "yellow",
     help: "聽完整讀音，找出問號那一格應該放的注音。",
-    levels: ["補最後一格", "任一格補字", "三個符號補字", "修好問號框"],
+    levels: ["補最後一格", "任一格補字", "兩、三符號混合補字", "修好問號框"],
   },
   shop: {
     title: "注音小商店",

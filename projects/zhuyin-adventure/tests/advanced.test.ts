@@ -72,6 +72,14 @@ describe("六款進階題庫", () => {
       ),
     ).toBe(true);
   });
+  it("混合難度同時有兩、三符號，超過十個可用物品", () => {
+    for (const game of ["train", "detective"] as AdvancedGame[]) {
+      const w = spellingCandidates(config(game, 2), pool);
+      expect(w.length).toBeGreaterThan(10);
+      expect(w.some((x) => x.parts.length === 2)).toBe(true);
+      expect(w.some((x) => x.parts.length === 3)).toBe(true);
+    }
+  });
   it("四款出題遊戲：連續十題不重複主目標", () => {
     for (const game of ["train", "tone", "detective", "shop"] as AdvancedGame[]) {
       for (let seed = 1; seed < 80; seed++) {

@@ -78,9 +78,7 @@ export function spellingCandidates(config: AdvancedConfig, pool: AdvancedPool) {
       ? w.parts.length === 2
       : config.game === "train" && config.difficulty === 1
         ? w.parts.length === 2
-        : config.difficulty === 2
-          ? w.parts.length === 3
-          : w.parts.length >= 2,
+        : w.parts.length >= 2,
   );
 }
 export function requirements(
