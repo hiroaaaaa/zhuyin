@@ -343,7 +343,11 @@ export function AdvancedRound({
       recent.current,
     );
     q.id = `${round}-${serial.current++}-${q.seed}`;
-    recent.current.push(q.target);
+    recent.current.push(
+      q.game === "detective" && q.difficulty > 0
+        ? `${q.target}#${q.missing}`
+        : q.target,
+    );
     return q;
   }
   const [q, setQ] = useState(newQuestion);

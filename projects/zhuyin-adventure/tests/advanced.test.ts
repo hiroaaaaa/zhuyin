@@ -80,6 +80,17 @@ describe("六款進階題庫", () => {
       expect(w.some((x) => x.parts.length === 3)).toBe(true);
     }
   });
+  it("缺字進階 30 題先走完不同詞語及缺字位置", () => {
+    for (const difficulty of [1, 2, 3]) {
+      const seen: string[] = [];
+      for (let i = 0; i < 30; i++) {
+        const q = makeAdvancedQuestion(config("detective", difficulty), pool, 5000 + i, seen);
+        const key = `${q.target}#${q.missing}`;
+        expect(seen).not.toContain(key);
+        seen.push(key);
+      }
+    }
+  });
   it("四款出題遊戲：連續十題不重複主目標", () => {
     for (const game of ["train", "tone", "detective", "shop"] as AdvancedGame[]) {
       for (let seed = 1; seed < 80; seed++) {

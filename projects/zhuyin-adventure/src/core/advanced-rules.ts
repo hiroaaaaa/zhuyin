@@ -156,14 +156,22 @@ export function makeAdvancedQuestion(
   const words = eligibleWords(pool);
   if (game === "train" || game === "detective") {
     const candidates = spellingCandidates(config, pool);
-    // 按本回合出現次數抽取：全部可用詞語各出一次後才開始下一輪。
-    const counts = new Map(candidates.map((w) => [w.id, 0]));
-    recent.forEach((id) => {
+    // 缺字遊戲依「詞語＋缺字位置」識別題目；優先出完所有不同位置。
+    const remaining =
+      game === "detective" && difficulty > 0
+        ? candidates.filter((w) =>
+            w.parts.some((_, i) => !recent.includes(`${w.id}#${i}`)),
+          )
+        : candidates;
+    const available = remaining.length ? remaining : candidates;
+    const counts = new Map(available.map((w) => [w.id, 0]));
+    recent.forEach((key) => {
+      const id = key.split("#")[0];
       if (counts.has(id)) counts.set(id, counts.get(id)! + 1);
     });
     const least = Math.min(...counts.values());
-    const balanced = candidates.filter((w) => counts.get(w.id) === least);
-    const fresh = balanced.filter((w) => w.id !== recent.at(-1));
+    const balanced = available.filter((w) => counts.get(w.id) === least);
+    const fresh = balanced.filter((w) => w.id !== recent.at(-1)?.split("#")[0]);
     const w = shuffle(fresh.length ? fresh : balanced, random)[0];
     q.target = w.id;
     q.words = [w.id];
@@ -187,10 +195,14 @@ export function makeAdvancedQuestion(
       if (difficulty === 3) q.answers.push(`tone-${w.tone}`);
       q.clips = ["advanced/train-help", wordClip(w.id)];
     } else {
+      const positions = w.parts.map((_, i) => i);
+      const unused = positions.filter(
+        (i) => !recent.includes(`${w.id}#${i}`),
+      );
       q.missing =
         difficulty === 0
           ? w.parts.length - 1
-          : Math.floor(random() * w.parts.length);
+          : shuffle(unused.length ? unused : positions, random)[0];
       q.answers = [w.parts[q.missing]];
       q.choices = shuffle(
         [
