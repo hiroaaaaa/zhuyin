@@ -66,7 +66,7 @@ export function eligibleWords(pool: AdvancedPool): Word[] {
 export function eligibleToneSamples(pool: AdvancedPool, difficulty: number) {
   return TONE_SAMPLES.filter(
     (s) =>
-      (difficulty === 3 ? !s.id.startsWith("tang") : s.id.startsWith("tang")) &&
+      (s.id.startsWith("word-") || (difficulty === 3 ? !s.id.startsWith("tang") : s.id.startsWith("tang"))) &&
       (difficulty !== 0 || [1, 4].includes(s.tone)) &&
       pool.introducedTones.includes(s.tone) &&
       s.parts.every((id) => pool.introduced.includes(id)),
@@ -75,7 +75,7 @@ export function eligibleToneSamples(pool: AdvancedPool, difficulty: number) {
 export function spellingCandidates(config: AdvancedConfig, pool: AdvancedPool) {
   return eligibleWords(pool).filter((w) =>
     config.game === "train" && config.difficulty === 0
-      ? w.parts.length === 2 && w.tone === 1
+      ? w.parts.length === 2
       : config.game === "train" && config.difficulty === 1
         ? w.parts.length === 2
         : config.difficulty === 2
@@ -143,9 +143,17 @@ export function makeAdvancedQuestion(
     words: [],
     clips: [],
   };
-  function choose<T extends { id: string }>(items: T[]) {
-    const fresh = items.filter((w) => !recent.slice(-2).includes(w.id));
-    return shuffle(fresh.length ? fresh : items, random)[0];
+  // 以整回合曝光次數均衡出題；「+」分隔同一題的多個目標。
+  function choose<T extends { id: string }>(items: T[], taken: string[] = []) {
+    const exposure = (id: string) =>
+      recent.reduce((n, entry) => n + entry.split("+").filter((part) => part === id).length, 0) +
+      taken.filter((part) => part === id).length;
+    const min = Math.min(...items.map((item) => exposure(item.id)));
+    const balanced = items.filter((item) => exposure(item.id) === min);
+    const fresh = balanced.filter((item) =>
+      !recent.slice(-2).some((entry) => entry.split("+").includes(item.id)),
+    );
+    return shuffle(fresh.length ? fresh : balanced, random)[0];
   }
   const words = eligibleWords(pool);
   if (game === "train" || game === "detective") {
@@ -213,10 +221,7 @@ export function makeAdvancedQuestion(
       difficulty === 2
         ? [
             first,
-            shuffle(
-              samples.filter((s) => s.id !== first.id),
-              random,
-            )[0],
+            choose(samples.filter((s) => s.id !== first.id), [first.id]),
           ]
         : [first];
     q.target = selected.map((s) => s.id).join("+");
@@ -239,17 +244,19 @@ export function makeAdvancedQuestion(
     ];
   } else if (game === "shop") {
     const count = difficulty === 0 ? 3 : difficulty === 3 ? 9 : 6;
-    const items = shuffle(words, random).slice(0, count);
-    const target = choose(items);
-    q.words = [
-      target.id,
-      ...shuffle(
-        items.filter((w) => w.id !== target.id),
-        random,
-      )
-        .slice(0, Math.max(0, difficulty - 1))
-        .map((w) => w.id),
-    ];
+    // 從全部已學商品輪流挑主角，其他圖片再作為干擾選項。
+    const order: string[] = [];
+    while (order.length < Math.max(1, difficulty)) {
+      order.push(choose(words.filter((w) => !order.includes(w.id)), order).id);
+    }
+    const items = shuffle(
+      [
+        ...words.filter((w) => order.includes(w.id)),
+        ...shuffle(words.filter((w) => !order.includes(w.id)), random).slice(0, count - order.length),
+      ],
+      random,
+    );
+    q.words = order;
     q.target = q.words.join("+");
     q.answers = q.words;
     q.choices = shuffle(
@@ -258,13 +265,11 @@ export function makeAdvancedQuestion(
     );
     q.clips = ["advanced/shop-help"];
   } else if (game === "memory") {
-    const pairs =
-      difficulty === 3
-        ? shuffle(
-            words.map((w) => w.id),
-            random,
-          ).slice(0, 4)
-        : shuffle(pool.introduced, random).slice(0, difficulty + 2);
+    const available = difficulty === 3 ? words.map((w) => w.id) : pool.introduced;
+    const pairs: string[] = [];
+    while (pairs.length < (difficulty === 3 ? 4 : difficulty + 2)) {
+      pairs.push(choose(available.filter((id) => !pairs.includes(id)).map((id) => ({ id })), pairs).id);
+    }
     q.target = pairs.join("+");
     q.words = difficulty === 3 ? pairs : [];
     q.cards = shuffle(
@@ -288,7 +293,10 @@ export function makeAdvancedQuestion(
     );
     q.clips = ["advanced/memory-help"];
   } else {
-    q.board = shuffle(pool.introduced, random).slice(0, 9);
+    // 地圖中心的主角依出現次數輪替，避免連續重複。
+    const center = choose(pool.introduced.map((id) => ({ id }))).id;
+    q.board = shuffle(pool.introduced.filter((id) => id !== center), random).slice(0, 8);
+    q.board.splice(4, 0, center);
     q.start = 4;
     q.positions = [];
     q.directions = [];

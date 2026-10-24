@@ -6,7 +6,7 @@ export const ADVANCED_GAMES = {
     icon: "🚂",
     color: "peach",
     help: "聽完整讀音，再依序點注音，放進小火車。",
-    levels: ["兩個符號・一聲", "兩個符號・四聲", "三個符號", "拼音＋選聲調"],
+    levels: ["兩個符號・聽拼音", "兩個符號・四聲", "三個符號", "拼音＋選聲調"],
   },
   tone: {
     title: "聲調氣球",
@@ -132,9 +132,12 @@ export const TONE_SAMPLES: ToneSample[] = [
   { id: "puppy", text: "小狗", parts: symbolIds("ㄒㄧㄠㄍㄡ"), tone: 3 },
   { id: "white-rabbit", text: "白兔", parts: symbolIds("ㄅㄞㄊㄨ"), tone: 4 },
   { id: "hat", text: "帽子", parts: symbolIds("ㄇㄠㄗ"), tone: 5 },
+  // 共用已備妥的單字語音，讓聲調練習有更多不同聲音。
+  ...WORDS.map((w) => ({ id: `word-${w.id}`, text: w.text, parts: w.parts, tone: w.tone })),
 ];
 export const toneSample = (id: string) =>
   TONE_SAMPLES.find((s) => s.id === id)!;
 export const tone = (id: number) => TONES.find((t) => t.id === id)!;
 export const wordClip = (id: string) => `advanced/word-${id}`;
-export const toneClip = (id: string) => `advanced/tone-${id}`;
+export const toneClip = (id: string) =>
+  id.startsWith("word-") ? wordClip(id.slice(5)) : `advanced/tone-${id}`;

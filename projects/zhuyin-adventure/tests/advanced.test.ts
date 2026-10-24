@@ -36,18 +36,19 @@ const config = (
   mode: "guided" | "complete" = "complete",
 ): AdvancedConfig => ({ game, difficulty, mode, questionCount: 5 });
 describe("六款進階題庫", () => {
-  it("入門有八個兩符號一聲詞語；五題不重複，三十題均勻且不連續重複", () => {
+  it("入門擴充兩符號詞語；每種詞語輪完才重複，三十題均衡", () => {
     const cfg = config("train");
-    expect(spellingCandidates(cfg, pool)).toHaveLength(8);
+    const count = WORDS.filter((w) => w.parts.length === 2).length;
+    expect(count).toBeGreaterThanOrEqual(12);
+    expect(spellingCandidates(cfg, pool)).toHaveLength(count);
     for (let seed = 0; seed < 200; seed++) {
       const recent: string[] = [];
       for (let n = 0; n < 30; n++) {
         const q = makeAdvancedQuestion(cfg, pool, seed * 31 + n, recent);
         expect(word(q.target).parts).toHaveLength(2);
-        expect(word(q.target).tone).toBe(1);
-        expect(q.target).not.toBe(recent.at(-1));
+         expect(q.target).not.toBe(recent.at(-1));
         recent.push(q.target);
-        if (n < 8) expect(new Set(recent).size).toBe(n + 1);
+        if (n < count) expect(new Set(recent).size).toBe(n + 1);
       }
       const counts = spellingCandidates(cfg, pool).map(
         (w) => recent.filter((id) => id === w.id).length,
@@ -70,6 +71,35 @@ describe("六款進階題庫", () => {
         (w) => w.parts.length === 2,
       ),
     ).toBe(true);
+  });
+  it("四款出題遊戲：連續十題不重複主目標", () => {
+    for (const game of ["train", "tone", "detective", "shop"] as AdvancedGame[]) {
+      for (let seed = 1; seed < 80; seed++) {
+        const recent: string[] = [];
+        for (let n = 0; n < 10; n++) {
+          const q = makeAdvancedQuestion(config(game), pool, seed * 100 + n, recent);
+          expect(recent).not.toContain(q.target);
+          recent.push(q.target);
+        }
+      }
+    }
+  });
+  it("聲調能重用詞語音檔，翻翻樂卡牌與尋寶中心盡可能輪替", () => {
+    const toneRecent: string[] = [];
+    for (let n = 0; n < 10; n++) {
+      const q = makeAdvancedQuestion(config("tone"), pool, n + 987, toneRecent);
+      expect(q.clips.at(-1)).toMatch(/^advanced\\/(tone-|word-)/);
+      toneRecent.push(q.target);
+    }
+    for (const game of ["memory", "treasure"] as AdvancedGame[]) {
+      const recent: string[] = [];
+      for (let n = 0; n < 8; n++) {
+        const q = makeAdvancedQuestion(config(game), pool, n + 2222, recent);
+        for (const id of q.target.split("+"))
+          expect(recent.flatMap((old) => old.split("+"))).not.toContain(id);
+        recent.push(q.target);
+      }
+    }
   });
   for (const game of Object.keys(ADVANCED_GAMES) as AdvancedGame[])
     for (let d = 0; d < 4; d++)
