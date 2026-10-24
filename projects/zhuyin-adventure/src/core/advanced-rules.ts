@@ -66,7 +66,7 @@ export function eligibleWords(pool: AdvancedPool): Word[] {
 export function eligibleToneSamples(pool: AdvancedPool, difficulty: number) {
   return TONE_SAMPLES.filter(
     (s) =>
-      (s.id.startsWith("word-") || (difficulty === 3 ? !s.id.startsWith("tang") : s.id.startsWith("tang"))) &&
+      (s.id.startsWith("word-") ? pool.advancedWords.includes(s.id.slice(5)) : (difficulty === 3 ? !s.id.startsWith("tang") : s.id.startsWith("tang"))) &&
       (difficulty !== 0 || [1, 4].includes(s.tone)) &&
       pool.introducedTones.includes(s.tone) &&
       s.parts.every((id) => pool.introduced.includes(id)),
