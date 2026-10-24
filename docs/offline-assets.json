@@ -1,14 +1,14 @@
 {
-  "version": "7f95d8ecba0c",
+  "version": "3ffde61d1d85",
   "count": 172,
   "assets": [
     {
-      "url": "assets/index-M5Dywizo.js",
-      "sha": "a27eba941494c658fde14b168ef1f08f9099009795766a9ef3b3dff636fa617a"
-    },
-    {
       "url": "assets/index-RJ2Qkt8V.css",
       "sha": "0ea70ffe080aba08f9422ec632e5b96d70ed45a64dcc48fc4fc2114fe7aa15e4"
+    },
+    {
+      "url": "assets/index-v1.3.1-20261024.js",
+      "sha": "80ae498f5c17fa4455d1ec3644f0b8301e9a2a574c5f502dafc2637c02c7e6af"
     },
     {
       "url": "audio/advanced/detective-help.mp3",
@@ -672,15 +672,15 @@
     },
     {
       "url": "index.html",
-      "sha": "d898d2d406afaed9eee2c22d0ce23b4f0078d7ef30b0931a55a433ccaf46952f"
-    },
-    {
-      "url": "licenses/Noto-OFL.txt",
-      "sha": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+      "sha": "19c0120641571d3da34dc277c9e2ee037d22832ff067ffaa51af8f00243a8287"
     },
     {
       "url": "licenses/moe.txt",
       "sha": "77dc1b7de5aaae11ad2d2d1092f972a4fc6636d39f2ea61119b1da91f44103e3"
+    },
+    {
+      "url": "licenses/Noto-OFL.txt",
+      "sha": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
     },
     {
       "url": "manifest.webmanifest",
@@ -688,7 +688,7 @@
     },
     {
       "url": "release.json",
-      "sha": "9893a558f6fc7c6584e5a02887ef2007e5dbed9750131d8a888a448de12c2b0b"
+      "sha": "e5133cde3f48c8d6de2e13b8f96ea0dedac70562d140736a1ca7a96939a5b817"
     }
   ]
 }
