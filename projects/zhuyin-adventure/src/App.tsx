@@ -11,7 +11,7 @@ import {
 } from "./data/advanced";
 import { wordNotation, type AdvancedConfig } from "./core/advanced-rules";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { SYMBOLS, symbol, batchSymbols, VERSION } from "./data/symbols";
+import { SYMBOLS, symbol, batchSymbols, VERSION, BUILD_ID } from "./data/symbols";
 import { audio } from "./core/audio";
 import {
   ALL_DIRS,
@@ -327,7 +327,7 @@ function Home({
         {offline.ready ? "✓ 離線素材已準備好" : "連線中：正在準備離線素材"}
       </p>
       <footer>
-        <span className="trial">親子試玩版 v{VERSION}</span>
+        <span className="trial">親子試玩版 v{VERSION} ・ 題庫 {WORDS.length} 詞</span>
         <p>第一次請大人陪玩。沒有帳號，也不錄音。</p>
         {offline.update && (
           <Button secondary onClick={() => void applyUpdate()}>
@@ -1348,6 +1348,67 @@ function AdultGate({
     </Modal>
   );
 }
+
+type ReleaseCheck = { status: "checking" | "current" | "new" | "offline"; latest?: string };
+function ReleaseInfo({ progress }: { progress: Progress }) {
+  const [release, setRelease] = useState<ReleaseCheck>({ status: "checking" });
+  const generation = useRef(0);
+  const playableWords = WORDS.filter(
+    (word) =>
+      progress.advancedWords.includes(word.id) &&
+      word.parts.every((id) => progress.introduced.includes(id)),
+  ).length;
+  async function checkForUpdates() {
+    const ticket = ++generation.current;
+    setRelease({ status: "checking" });
+    try {
+      // The service worker bypasses this endpoint; always check the live published build.
+      const response = await fetch(`${BASE}release.json?check=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("release not available");
+      const published: unknown = await response.json();
+      if (
+        typeof published !== "object" || published === null ||
+        !("version" in published) || typeof published.version !== "string" ||
+        !("build" in published) || typeof published.build !== "string"
+      ) throw new Error("invalid release info");
+      if (ticket !== generation.current) return;
+      const updated = published.build !== BUILD_ID;
+      setRelease({ status: updated ? "new" : "current", latest: published.version });
+      if (updated && "serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration(BASE);
+        void registration?.update().catch(() => {});
+      }
+    } catch {
+      if (ticket === generation.current) setRelease({ status: "offline" });
+    }
+  }
+  useEffect(() => {
+    void checkForUpdates();
+    return () => { generation.current += 1; };
+  }, []);
+  return (
+    <section className="summary-card" aria-label="遊戲版本與題庫資訊">
+      <h2>版本與題庫資訊</h2>
+      <div className="metrics">
+        <div><strong>v{VERSION}</strong><span>目前使用版本</span></div>
+        <div><strong>{WORDS.length}</strong><span>完整詞語題庫</span></div>
+        <div><strong>{playableWords}</strong><span>本機已開放詞語</span></div>
+      </div>
+      <p>本機已標記 {progress.advancedWords.length} 個詞語，並已認識 {progress.introduced.length}/37 個注音；只有兩項條件都符合的詞語才可練習。</p>
+      <p className="muted">發布識別：{BUILD_ID}。每回合可選 5、10、15、20、30 題。</p>
+      <p role="status">
+        {release.status === "checking" ? "正在連線檢查發布版本…" :
+          release.status === "current" ? "✓ 已是最新版。" :
+          release.status === "new" ? `有新版 v${release.latest}，可更新遊戲。` :
+          "無法連線確認最新版；離線遊戲仍可繼續。"}
+      </p>
+      <Button secondary onClick={() => void checkForUpdates()}>重新檢查更新</Button>
+      {release.status === "new" && (
+        <Button onClick={() => void applyUpdate()}>更新樂園</Button>
+      )}
+    </section>
+  );
+}
 function Parent({
   progress,
   update,
@@ -1729,6 +1790,7 @@ function Parent({
         </>
       ) : (
         <>
+          <ReleaseInfo progress={progress} />
           <section>
             <h2>親子試玩版 v{VERSION}</h2>
             <p>
