@@ -88,7 +88,7 @@ describe("六款進階題庫", () => {
     const toneRecent: string[] = [];
     for (let n = 0; n < 10; n++) {
       const q = makeAdvancedQuestion(config("tone"), pool, n + 987, toneRecent);
-      expect(q.clips.at(-1)).toMatch(/^advanced\\/(tone-|word-)/);
+      expect(q.clips.at(-1)).toMatch(new RegExp("^advanced/(tone-|word-)"));
       toneRecent.push(q.target);
     }
     for (const game of ["memory", "treasure"] as AdvancedGame[]) {
